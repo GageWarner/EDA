@@ -1,0 +1,208 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMq7VMUSBoyMV7P4FHitf5R",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/GageWarner/miniature-lamp/blob/main/FootballAnalyticsCh1\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "pip install nfl_data_py"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "cjPftbjsDmjU",
+        "outputId": "ba84ec91-5da8-4d0c-92cd-378322adad05"
+      },
+      "execution_count": 22,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: nfl_data_py in /usr/local/lib/python3.10/dist-packages (0.3.1)\n",
+            "Requirement already satisfied: pandas>1 in /usr/local/lib/python3.10/dist-packages (from nfl_data_py) (2.0.3)\n",
+            "Requirement already satisfied: appdirs>1 in /usr/local/lib/python3.10/dist-packages (from nfl_data_py) (1.4.4)\n",
+            "Requirement already satisfied: fastparquet>0.5 in /usr/local/lib/python3.10/dist-packages (from nfl_data_py) (2024.2.0)\n",
+            "Requirement already satisfied: python-snappy>0.5 in /usr/local/lib/python3.10/dist-packages (from nfl_data_py) (0.7.1)\n",
+            "Requirement already satisfied: numpy>=1.20.3 in /usr/local/lib/python3.10/dist-packages (from fastparquet>0.5->nfl_data_py) (1.25.2)\n",
+            "Requirement already satisfied: cramjam>=2.3 in /usr/local/lib/python3.10/dist-packages (from fastparquet>0.5->nfl_data_py) (2.8.3)\n",
+            "Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from fastparquet>0.5->nfl_data_py) (2023.6.0)\n",
+            "Requirement already satisfied: packaging in /usr/local/lib/python3.10/dist-packages (from fastparquet>0.5->nfl_data_py) (24.0)\n",
+            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.10/dist-packages (from pandas>1->nfl_data_py) (2.8.2)\n",
+            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.10/dist-packages (from pandas>1->nfl_data_py) (2023.4)\n",
+            "Requirement already satisfied: tzdata>=2022.1 in /usr/local/lib/python3.10/dist-packages (from pandas>1->nfl_data_py) (2024.1)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.8.2->pandas>1->nfl_data_py) (1.16.0)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 23,
+      "metadata": {
+        "id": "_Pc_FsnZDgKN"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "import nfl_data_py as nfl"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "pbp_py = nfl.import_pbp_data([2021])"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "dluM7U1REDWB",
+        "outputId": "41111ebe-50a2-4dd6-d8e3-b33964bfbbed"
+      },
+      "execution_count": 24,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "2021 done.\n",
+            "Downcasting floats.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "filter_crit = 'play_type == \"pass\" & air_yards.notnull()'"
+      ],
+      "metadata": {
+        "id": "iJj3i6eYEI3X"
+      },
+      "execution_count": 25,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "pbp_py_p = (\n",
+        "      pbp_py.query(filter_crit)\n",
+        "      .groupby([\"passer_id\", \"passer\"])\n",
+        "      .agg({\"air_yards\": [\"count\", \"mean\"]})\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "35uPq5HAEYTH"
+      },
+      "execution_count": 26,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "pbp_py_p.columns = list(map(\"_\".join, pbp_py_p.columns.values))\n",
+        "sort_crit = \"air_yards_count > 100\"\n",
+        "print(\n",
+        "    pbp_py_p.query(sort_crit)\\\n",
+        "    .sort_values(by=\"air_yards_mean\", ascending=[False])\\\n",
+        "    .to_string()\n",
+        ")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "zjyRYs0oEpFZ",
+        "outputId": "8e940c6b-4c66-4b85-e3e3-bea11c5cd85c"
+      },
+      "execution_count": 27,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "                             air_yards_count  air_yards_mean\n",
+            "passer_id  passer                                           \n",
+            "00-0035704 D.Lock                        110       10.154546\n",
+            "00-0029263 R.Wilson                      400        9.887500\n",
+            "00-0036945 J.Fields                      268        9.835821\n",
+            "00-0034796 L.Jackson                     378        9.341269\n",
+            "00-0036389 J.Hurts                       473        9.190275\n",
+            "00-0034855 B.Mayfield                    416        8.776443\n",
+            "00-0026498 M.Stafford                    740        8.508108\n",
+            "00-0031503 J.Winston                     161        8.322982\n",
+            "00-0029604 K.Cousins                     556        8.228417\n",
+            "00-0034857 J.Allen                       708        8.224576\n",
+            "00-0031280 D.Carr                        676        8.128698\n",
+            "00-0031237 T.Bridgewater                 426        8.037559\n",
+            "00-0019596 T.Brady                       808        7.941832\n",
+            "00-0035228 K.Murray                      515        7.941748\n",
+            "00-0036971 T.Lawrence                    598        7.913043\n",
+            "00-0036972 M.Jones                       557        7.901257\n",
+            "00-0033077 D.Prescott                    638        7.811912\n",
+            "00-0036442 J.Burrow                      659        7.745068\n",
+            "00-0023459 A.Rodgers                     556        7.730216\n",
+            "00-0031800 T.Heinicke                    491        7.692464\n",
+            "00-0035993 T.Huntley                     185        7.675676\n",
+            "00-0032950 C.Wentz                       516        7.641473\n",
+            "00-0029701 R.Tannehill                   554        7.606498\n",
+            "00-0037013 Z.Wilson                      382        7.565445\n",
+            "00-0036355 J.Herbert                     671        7.554397\n",
+            "00-0033119 J.Brissett                    224        7.549107\n",
+            "00-0033357 T.Hill                        132        7.439394\n",
+            "00-0028118 T.Taylor                      149        7.429530\n",
+            "00-0030520 M.Glennon                     164        7.378049\n",
+            "00-0035710 D.Jones                       360        7.344444\n",
+            "00-0036898 D.Mills                       392        7.318878\n",
+            "00-0031345 J.Garoppolo                   511        7.305284\n",
+            "00-0034869 S.Darnold                     405        7.259259\n",
+            "00-0026143 M.Ryan                        559        7.159213\n",
+            "00-0032156 T.Siemian                     187        7.133690\n",
+            "00-0036212 T.Tagovailoa                  387        7.103359\n",
+            "00-0033873 P.Mahomes                     780        7.075641\n",
+            "00-0027973 A.Dalton                      235        6.987234\n",
+            "00-0027939 C.Newton                      126        6.968254\n",
+            "00-0022924 B.Roethlisberger              647        6.761978\n",
+            "00-0033106 J.Goff                        489        6.441718\n",
+            "00-0034401 M.White                       132        5.886364\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "GbgisjPFGuMA"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
